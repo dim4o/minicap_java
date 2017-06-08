@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Observer;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
 
@@ -35,11 +36,11 @@ import com.wuba.utils.TimeUtil;
 
 /**
  * @author hui.qian qianhui@58.com
- * @date 2015年8月12日 上午11:02:53
+ * 
  */
 public class MiniCapUtil implements ScreenSubject {
 	private static final Logger LOG = Logger.getLogger(MiniCapUtil.class);
-	// CPU架构的种类
+	// The type of CPU architecture
 	public static final String ABIS_ARM64_V8A = "arm64-v8a";
 	public static final String ABIS_ARMEABI_V7A = "armeabi-v7a";
 	public static final String ABIS_X86 = "x86";
@@ -69,7 +70,7 @@ public class MiniCapUtil implements ScreenSubject {
 		this.device = device;
 		init();
 	}
-	//判断是否支持minicap
+	// To determine whether to support minicap
 	public boolean isSupoort(){
 		String supportCommand = String.format("LD_LIBRARY_PATH=/data/local/tmp /data/local/tmp/minicap -P %s@%s/0 -t", size,size);
 		String output = executeShellCommand(supportCommand);
@@ -80,7 +81,7 @@ public class MiniCapUtil implements ScreenSubject {
 	}
 	
 	/**
-	 * 将minicap的二进制和.so文件push到/data/local/tmp文件夹下，启动minicap服务
+	 * Place the minicap binary and .so files into the / data / local / tmp folder, start the minicap service
 	 */
 	private void init() {
 
@@ -91,24 +92,24 @@ public class MiniCapUtil implements ScreenSubject {
 		File minicapSoFile = new File(Constant.getMinicapSo(), "android-" + sdk
 				+ File.separator + abi + File.separator + MINICAP_SO);
 		try {
-			// 将minicap的可执行文件和.so文件一起push到设备中
-			device.pushFile(minicapBinFile.getAbsolutePath(), REMOTE_PATH
+			// Push the minicap executable and the .so file to the device
+			/*device.pushFile(minicapBinFile.getAbsolutePath(), REMOTE_PATH
 					+ File.separator + MINICAP_BIN);
 			device.pushFile(minicapSoFile.getAbsolutePath(), REMOTE_PATH
-					+ File.separator + MINICAP_SO);
+					+ File.separator + MINICAP_SO);*/
 			executeShellCommand(String.format(MINICAP_CHMOD_COMMAND,
 					REMOTE_PATH, MINICAP_BIN));
-			// 端口转发
+			// Port forwarding
 			device.createForward(PORT, "minicap",
 					DeviceUnixSocketNamespace.ABSTRACT);
 
-			// 获取设备屏幕的尺寸
+			// Get the size of the device screen
 			String output = executeShellCommand(MINICAP_WM_SIZE_COMMAND);
-			size = output.split(":")[1].trim();
-		} catch (SyncException e) {
+			size = output.split(":")[1].trim(); // 600x800
+		} /*catch (SyncException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (IOException e) {
+		}*/ catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (AdbCommandRejectedException e) {
@@ -177,7 +178,7 @@ public class MiniCapUtil implements ScreenSubject {
 	private String executeShellCommand(String command) {
 		CollectingOutputReceiver output = new CollectingOutputReceiver();
 		try {
-			device.executeShellCommand(command, output, 0);
+			device.executeShellCommand(command, output, 30, TimeUnit.SECONDS);
 		} catch (TimeoutException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -212,7 +213,7 @@ public class MiniCapUtil implements ScreenSubject {
 		try {
 			bufferedImage = ImageIO.read(in);
 			if (bufferedImage == null) {
-				LOG.debug("bufferimage为空");
+				LOG.debug("Buffered image is empty");
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -231,11 +232,11 @@ public class MiniCapUtil implements ScreenSubject {
 
 	private Image createImage(byte[] data) {
 		Image image = Toolkit.getDefaultToolkit().createImage(data);
-		LOG.info("创建成功");
+		LOG.info("Create success");
 		return image;
 	}
 
-	// java合并两个byte数组
+	// Java merge two byte arrays
 	private static byte[] byteMerger(byte[] byte_1, byte[] byte_2) {
 		byte[] byte_3 = new byte[byte_1.length + byte_2.length];
 		System.arraycopy(byte_1, 0, byte_3, 0, byte_1.length);
@@ -260,15 +261,15 @@ public class MiniCapUtil implements ScreenSubject {
 		// private DataInputStream input = null;
 
 		public void run() {
-			LOG.debug("图片二进制数据收集器已经开启");
+			LOG.debug("Picture Binary Data Collector is already on");
 			try {
 
 				final String startCommand = String.format(
 						MINICAP_START_COMMAND, size, size);
-				// 启动minicap服务
+				// еђЇеЉЁminicapжњЌеЉЎ
 				new Thread(new Runnable() {
 					public void run() {
-						LOG.info("minicap服务器启动 : " + startCommand);
+						LOG.info("The minicap server starts : " + startCommand);
 						executeShellCommand(startCommand);
 					}
 				}).start();
@@ -313,7 +314,7 @@ public class MiniCapUtil implements ScreenSubject {
 				}
 			}
 
-			LOG.debug("图片二进制数据收集器已关闭");
+			LOG.debug("Picture Binary Data Collector is off");
 		}
 
 	}
@@ -335,7 +336,7 @@ public class MiniCapUtil implements ScreenSubject {
 			long start = System.currentTimeMillis();
 			while (isRunning) {
 				if (dataQueue.isEmpty()) {
-					// LOG.info("数据队列为空");
+					// LOG.info("The data queue is empty");
 					continue;
 				}
 				byte[] buffer = dataQueue.poll();
@@ -345,11 +346,11 @@ public class MiniCapUtil implements ScreenSubject {
 					if (readBannerBytes < bannerLength) {
 						cursor = parserBanner(cursor, byte10);
 					} else if (readFrameBytes < 4) {
-						// 第二次的缓冲区中前4位数字和为frame的缓冲区大小
+						// The first four bits of the buffer are the size of the buffer for the frame
 						frameBodyLength += (byte10 << (readFrameBytes * 8)) >>> 0;
 						cursor += 1;
 						readFrameBytes += 1;
-						// LOG.debug("解析图片大小 = " + readFrameBytes);
+						// LOG.debug("Resolve image size = " + readFrameBytes);
 					} else {
 						if (len - cursor >= frameBodyLength) {
 							LOG.debug("frameBodyLength = " + frameBodyLength);
@@ -363,7 +364,7 @@ public class MiniCapUtil implements ScreenSubject {
 							}
 							final byte[] finalBytes = subByteArray(frameBody,
 									0, frameBody.length);
-							// 转化成bufferImage
+							// Convert to bufferedImage
 							new Thread(new Runnable() {
 
 								@Override
@@ -375,14 +376,14 @@ public class MiniCapUtil implements ScreenSubject {
 							}).start();
 
 							long current = System.currentTimeMillis();
-							LOG.info("图片已生成,耗时: "
+							LOG.info("Image has been generated and time consuming: "
 									+ TimeUtil.formatElapsedTime(current
 											- start));
 							start = current;
 							cursor += frameBodyLength;
 							restore();
 						} else {
-							LOG.debug("所需数据大小 : " + frameBodyLength);
+							LOG.debug("The required data size : " + frameBodyLength);
 							byte[] subByte = subByteArray(buffer, cursor, len);
 							frameBody = byteMerger(frameBody, subByte);
 							frameBodyLength -= (len - cursor);

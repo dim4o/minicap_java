@@ -5,7 +5,7 @@ package com.wuba.device;
 
 /**
  * @author hui.qian qianhui@58.com
- * @date 2015年8月17日 下午5:35:11
+ * 
  */
 public class Test {
 

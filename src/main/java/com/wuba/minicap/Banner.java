@@ -5,7 +5,7 @@ package com.wuba.minicap;
 
 /**
  * @author hui.qian qianhui@58.com
- * @date 2015年8月10日 下午4:29:42
+ * 
  */
 public class Banner {
 	@Override

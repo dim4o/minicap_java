@@ -28,7 +28,7 @@ import com.wuba.minicap.MiniCapUtil;
 
 /**
  * @author hui.qian qianhui@58.com
- * @date 2015年8月14日 下午7:40:17
+ * 
  */
 
 public class MinicapTest extends JFrame {
@@ -36,14 +36,14 @@ public class MinicapTest extends JFrame {
 
 	private MyPanel mp = null;
 	private IDevice device;
-	private int width = 300;
-	private int height = 500;
+	private int width = 384; // 300;
+	private int height = 640; // 500;
 	private Thread thread = null;
 
 	public MinicapTest() {
 		ADB adb = new ADB();
 		if (adb.getDevices().length <= 0) {
-			LOG.error("无连接设备,请检查");
+			LOG.error("No connection device, please check");
 			return;
 		}
 		device = adb.getDevices()[0];
@@ -85,9 +85,9 @@ public class MinicapTest extends JFrame {
 			try {
 				if (image == null)
 					return;
-				MinicapTest.this.setSize(width, height);
+				MinicapTest.this.setSize(width + 10, height + 40);
 				g.drawImage(image, 0, 0, width, height, null);
-				this.setSize(300, height + 300);
+				this.setSize(width + 10, height + 20);
 				image.flush();
 			} catch (Exception e) {
 				// TODO Auto-generated catch block

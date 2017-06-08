@@ -5,7 +5,6 @@ import java.io.File;
 import com.android.ddmlib.AndroidDebugBridge;
 import com.android.ddmlib.IDevice;
 
-
 public class ADB {
 	
 	private AndroidDebugBridge mAndroidDebugBridge = null;
@@ -18,7 +17,7 @@ public class ADB {
 	}
 	
 	/**
-	 * 获取系统adb路径
+	 * Get the system adb path
 	 * @return
 	 */
 	private String getADBPath(){
@@ -35,7 +34,7 @@ public class ADB {
 	}
 
 	/**
-	 * 初始化adb连接
+	 * Initialize adb connection
 	 * @return
 	 */
 	private boolean init() {
@@ -49,7 +48,7 @@ public class ADB {
 					success = true;
 					hasInitAdb = true;
 				}
-				// 延时处理adb获取设备信息
+				// Delay processing adb gets device information
 				if (success) {
 					int loopCount = 0;
 					while (mAndroidDebugBridge.hasInitialDeviceList() == false) {
@@ -70,7 +69,7 @@ public class ADB {
 		return success;
 	}
 	
-	// 获取连接的设备列表
+	// Gets the list of connected devices
 	public IDevice[] getDevices() {
 		IDevice[] devicelist = null;
 		if (mAndroidDebugBridge != null) {

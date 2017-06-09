@@ -17,7 +17,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Observer;
 import java.util.Queue;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
@@ -65,7 +67,11 @@ public class MiniCapUtil implements ScreenSubject {
 	private String ADB_PULL_COMMAND = "adb -s %s pull %s %s";
 	private boolean isRunning = false;
 	private String size;
-
+	
+	private static long testSize = 0;
+	
+	private static double max = Integer.MIN_VALUE;
+	
 	public MiniCapUtil(IDevice device) {
 		this.device = device;
 		init();
@@ -87,40 +93,48 @@ public class MiniCapUtil implements ScreenSubject {
 
 		String abi = device.getProperty(ABI_COMMAND);
 		String sdk = device.getProperty(SDK_COMMAND);
-		File minicapBinFile = new File(Constant.getMinicapBin(), abi
-				+ File.separator + MINICAP_BIN);
-		File minicapSoFile = new File(Constant.getMinicapSo(), "android-" + sdk
-				+ File.separator + abi + File.separator + MINICAP_SO);
+		File minicapBinFile = new File(Constant.getMinicapBin(), abi + "/" + MINICAP_BIN);
+		File minicapSoFile = new File(Constant.getMinicapSo(), "android-" + sdk + "/" + abi + File.separator + MINICAP_SO);
 		try {
 			// Push the minicap executable and the .so file to the device
-			/*device.pushFile(minicapBinFile.getAbsolutePath(), REMOTE_PATH
-					+ File.separator + MINICAP_BIN);
-			device.pushFile(minicapSoFile.getAbsolutePath(), REMOTE_PATH
-					+ File.separator + MINICAP_SO);*/
-			executeShellCommand(String.format(MINICAP_CHMOD_COMMAND,
-					REMOTE_PATH, MINICAP_BIN));
+			device.pushFile(minicapBinFile.getAbsolutePath(), REMOTE_PATH + "/" + MINICAP_BIN);
+			device.pushFile(minicapSoFile.getAbsolutePath(), REMOTE_PATH + "/" + MINICAP_SO);
+			executeShellCommand(String.format(MINICAP_CHMOD_COMMAND, REMOTE_PATH, MINICAP_BIN));
 			// Port forwarding
-			device.createForward(PORT, "minicap",
-					DeviceUnixSocketNamespace.ABSTRACT);
+			device.createForward(PORT, "minicap", DeviceUnixSocketNamespace.ABSTRACT);
 
 			// Get the size of the device screen
 			String output = executeShellCommand(MINICAP_WM_SIZE_COMMAND);
 			size = output.split(":")[1].trim(); // 600x800
-		} /*catch (SyncException e) {
+		} catch (SyncException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}*/ catch (IOException e) {
-			// TODO Auto-generated catch block
+		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (AdbCommandRejectedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (TimeoutException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-	}
+		
+		// Service for benchmark
+		ScheduledExecutorService ses = Executors.newScheduledThreadPool(10);
+	    ses.scheduleAtFixedRate(new Runnable() {
+	        @Override
+	        public void run() {
+	            if(testSize > max) {
+	               max = testSize; 
+	            } 
 
+	            testSize = 0;
+	            
+	            System.out.println();
+	            System.out.println("Max: " + max);
+	            System.out.println();
+	        }
+	    }, 0, 1, TimeUnit.SECONDS); 
+	}
+	
 	public void takeScreenShotOnce() {
 		String savePath = "/data/local/tmp/screenshot.jpg";
 		String takeScreenShotCommand = String.format(
@@ -144,22 +158,19 @@ public class MiniCapUtil implements ScreenSubject {
 			// process.waitFor();
 			Runtime.getRuntime().exec(pullCommand);
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (SyncException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (AdbCommandRejectedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (TimeoutException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 	}
 
-	private static String bytesToHexString(byte[] src) {
+	@SuppressWarnings("unused")
+    private static String bytesToHexString(byte[] src) {
 		StringBuilder stringBuilder = new StringBuilder("");
 		if (src == null || src.length <= 0) {
 			return null;
@@ -175,21 +186,19 @@ public class MiniCapUtil implements ScreenSubject {
 		return stringBuilder.toString();
 	}
 
-	private String executeShellCommand(String command) {
+	
+    @SuppressWarnings("deprecation")
+    private String executeShellCommand(String command) {
 		CollectingOutputReceiver output = new CollectingOutputReceiver();
 		try {
-			device.executeShellCommand(command, output, 30, TimeUnit.SECONDS);
+			device.executeShellCommand(command, output, 0);
 		} catch (TimeoutException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (AdbCommandRejectedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (ShellCommandUnresponsiveException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return output.getOutput();
@@ -230,7 +239,8 @@ public class MiniCapUtil implements ScreenSubject {
 		return bufferedImage;
 	}
 
-	private Image createImage(byte[] data) {
+	@SuppressWarnings("unused")
+    private Image createImage(byte[] data) {
 		Image image = Toolkit.getDefaultToolkit().createImage(data);
 		LOG.info("Create success");
 		return image;
@@ -254,7 +264,7 @@ public class MiniCapUtil implements ScreenSubject {
 		System.arraycopy(byte1, start, byte2, 0, end - start);
 		return byte2;
 	}
-
+	
 	class ImageBinaryFrameCollector implements Runnable {
 		private InputStream stream = null;
 
@@ -266,7 +276,7 @@ public class MiniCapUtil implements ScreenSubject {
 
 				final String startCommand = String.format(
 						MINICAP_START_COMMAND, size, size);
-				// еђЇеЉЁminicapжњЌеЉЎ
+				// Start the minicap service
 				new Thread(new Runnable() {
 					public void run() {
 						LOG.info("The minicap server starts : " + startCommand);
@@ -283,16 +293,19 @@ public class MiniCapUtil implements ScreenSubject {
 				socket = new Socket("localhost", PORT);
 				stream = socket.getInputStream();
 				// input = new DataInputStream(stream);
-				int len = 4096;
+				final int len = 4096;
 				while (isRunning) {
 					byte[] buffer;
 					buffer = new byte[len];
+
 					int realLen = stream.read(buffer);
+					// Benchmark computation
+                    testSize += realLen;
+                    
 					if (buffer.length != realLen) {
 						buffer = subByteArray(buffer, 0, realLen);
 					}
 					dataQueue.add(buffer);
-
 				}
 			} catch (IOException e) {
 				e.printStackTrace();

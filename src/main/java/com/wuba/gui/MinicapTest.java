@@ -39,6 +39,8 @@ public class MinicapTest extends JFrame {
 	private int width = 384; // 300;
 	private int height = 640; // 500;
 	private Thread thread = null;
+	
+	private long bytes = 0;
 
 	public MinicapTest() {
 		ADB adb = new ADB();
@@ -47,6 +49,7 @@ public class MinicapTest extends JFrame {
 			return;
 		}
 		device = adb.getDevices()[0];
+		
 		mp = new MyPanel(device,this);
 		this.getContentPane().add(mp);
 		this.setSize(300, height);

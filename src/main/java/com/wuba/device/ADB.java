@@ -77,5 +77,16 @@ public class ADB {
 		}
 		return devicelist;
 	}
+	
+	public IDevice getDeviceBySerial(String serialNumber) {
+	    IDevice[] devices = mAndroidDebugBridge.getDevices();
+	    for (IDevice device : devices) {
+            if(device.getSerialNumber().equals(serialNumber)) {
+                return device;
+            }
+        }
+	    
+	    return null;
+	}
 }
 

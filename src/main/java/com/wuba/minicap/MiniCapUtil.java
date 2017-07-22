@@ -76,6 +76,7 @@ public class MiniCapUtil implements ScreenSubject {
 		this.device = device;
 		init();
 	}
+	
 	// To determine whether to support minicap
 	public boolean isSupoort(){
 		String supportCommand = String.format("LD_LIBRARY_PATH=/data/local/tmp /data/local/tmp/minicap -P %s@%s/0 -t", size,size);
@@ -94,7 +95,7 @@ public class MiniCapUtil implements ScreenSubject {
 		String abi = device.getProperty(ABI_COMMAND);
 		String sdk = device.getProperty(SDK_COMMAND);
 		File minicapBinFile = new File(Constant.getMinicapBin(), abi + "/" + MINICAP_BIN);
-		File minicapSoFile = new File(Constant.getMinicapSo(), "android-" + sdk + "/" + abi + File.separator + MINICAP_SO);
+		File minicapSoFile = new File(Constant.getMinicapSo(), "android-" + sdk + "/" + abi + "/" + MINICAP_SO);
 		try {
 			// Push the minicap executable and the .so file to the device
 			device.pushFile(minicapBinFile.getAbsolutePath(), REMOTE_PATH + "/" + MINICAP_BIN);
@@ -137,9 +138,7 @@ public class MiniCapUtil implements ScreenSubject {
 	
 	public void takeScreenShotOnce() {
 		String savePath = "/data/local/tmp/screenshot.jpg";
-		String takeScreenShotCommand = String.format(
-				MINICAP_TAKESCREENSHOT_COMMAND, size,
-				size, savePath);
+		String takeScreenShotCommand = String.format(MINICAP_TAKESCREENSHOT_COMMAND, size, size, savePath);
 		String localPath = System.getProperty("user.dir") + "/screenshot.jpg";
 		String pullCommand = String.format(ADB_PULL_COMMAND,
 				device.getSerialNumber(), savePath, localPath);
@@ -274,8 +273,7 @@ public class MiniCapUtil implements ScreenSubject {
 			LOG.debug("Picture Binary Data Collector is already on");
 			try {
 
-				final String startCommand = String.format(
-						MINICAP_START_COMMAND, size, size);
+				final String startCommand = String.format(MINICAP_START_COMMAND, size, size);
 				// Start the minicap service
 				new Thread(new Runnable() {
 					public void run() {
